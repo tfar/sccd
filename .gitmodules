@@ -1,0 +1,4 @@
+[submodule "3rdparty/relic"]
+	path = 3rdparty/relic
+	url = https://github.com/relic-toolkit/relic
+	branch = master

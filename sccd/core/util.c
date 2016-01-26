@@ -1,3 +1,5 @@
+#include <sccd/core/util.h>
+
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -13,12 +15,30 @@
 
 #include <blake2.h>
 
+#if defined(SCCD_BACKEND_RELIC)
+	#include <relic/relic.h>
+#endif
+
 static const char *random_iv = "sccd_crypto_iv";
 
 static uint8_t random_state[32];
 
 const char* sccd_backend_name() {
+#if defined(SCCD_BACKEND_C25519)
 	return "c25519";
+#elif defined(SCCD_BACKEND_RELIC)
+	return "relic";
+#else
+	#error No crypto backend defined. See README.
+#endif
+}
+
+void sccd_init() {
+#if defined(SCCD_BACKEND_RELIC)
+	core_init();
+	ec_param_set_any();
+#endif
+	sccd_random_init();
 }
 
 uint8_t sccd_random_byte() {

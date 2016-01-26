@@ -1,6 +1,17 @@
-#include <c25519/src/f25519.h>
+#if defined(SCCD_BACKEND_C25519)
+	#include <c25519/src/f25519.h>
+#elif defined(SCCD_BACKEND_RELIC)
+	#include <relic/relic.h>
+#else
+	#error No crypto backend defined. See README.
+#endif
 
-typedef uint8_t sccd_fp_t[F25519_SIZE];
+
+#if defined(SCCD_BACKEND_C25519)
+	typedef uint8_t sccd_fp_t[F25519_SIZE];
+#elif defined(SCCD_BACKEND_RELIC)
+	typedef fp_t sccd_fp_t;
+#endif
 
 void sccd_fp_add(sccd_fp_t res, const sccd_fp_t a, const sccd_fp_t b);
 

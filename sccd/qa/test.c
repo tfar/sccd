@@ -1,5 +1,6 @@
 #include <sccd/core/fp.h>
 #include <sccd/core/ec.h>
+#include <sccd/core/util.h>
 
 #include <assert.h>
 #include <stdio.h>
@@ -45,7 +46,7 @@ void test_ec_random() {
 	for (int a = 0; a < 100; a++) {
 		sccd_ec_t n;
 
-		sccd_ec_random(&n);
+		sccd_ec_random(n);
 	}
 }
 
@@ -58,6 +59,7 @@ void test_vbnn_ibs() {
 }
 
 int main(int argc, const char **argv) {
+	sccd_init();
 	test_fb();
 	test_ecc();
 

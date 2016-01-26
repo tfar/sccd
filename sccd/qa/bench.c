@@ -166,11 +166,11 @@ void bench_ec_add() {
 	for (int z = 0; z < iterations; z++) {
 		sccd_ec_t a, b, c;
 
-		sccd_ec_random(&a);
-		sccd_ec_random(&b);
+		sccd_ec_random(a);
+		sccd_ec_random(b);
 
 		SCCD_BENCH_KERNEL("ec_add",
-			sccd_ec_add(&c, &a, &b);
+			sccd_ec_add(c, a, b);
 		)
 	}
 	SCCD_BENCH_RESULTS("ec_add")
@@ -181,11 +181,11 @@ void bench_ec_sub() {
 	for (int z = 0; z < iterations; z++) {
 		sccd_ec_t a, b, c;
 
-		sccd_ec_random(&a);
-		sccd_ec_random(&b);
+		sccd_ec_random(a);
+		sccd_ec_random(b);
 
 		SCCD_BENCH_KERNEL("ec_sub",
-			sccd_ec_sub(&c, &a, &b);
+			sccd_ec_sub(c, a, b);
 		)
 	}
 	SCCD_BENCH_RESULTS("ec_sub")
@@ -196,10 +196,10 @@ void bench_ec_double() {
 	for (int z = 0; z < iterations; z++) {
 		sccd_ec_t a, c;
 
-		sccd_ec_random(&a);
+		sccd_ec_random(a);
 
 		SCCD_BENCH_KERNEL("ec_double",
-			sccd_ec_double(&c, &a);
+			sccd_ec_double(c, a);
 		)
 	}
 	SCCD_BENCH_RESULTS("ec_double")
@@ -212,10 +212,10 @@ void bench_ec_mul() {
 		sccd_fp_t n;
 
 		sccd_fp_random(n);
-		sccd_ec_random(&a);
+		sccd_ec_random(a);
 
 		SCCD_BENCH_KERNEL("ec_mul",
-			sccd_ec_mul(&c, &a, n);
+			sccd_ec_mul(c, a, n);
 		)
 	}
 	SCCD_BENCH_RESULTS("ec_mul")
@@ -226,11 +226,11 @@ void bench_ec_equal() {
 	for (int z = 0; z < iterations; z++) {
 		sccd_ec_t a, b;
 
-		sccd_ec_random(&a);
-		sccd_ec_random(&b);
+		sccd_ec_random(a);
+		sccd_ec_random(b);
 
 		SCCD_BENCH_KERNEL("ec_equal",
-			sccd_ec_equal(&a, &b);
+			sccd_ec_equal(a, b);
 		)
 	}
 	SCCD_BENCH_RESULTS("ec_equal")
@@ -241,10 +241,10 @@ void bench_ec_copy() {
 	for (int z = 0; z < iterations; z++) {
 		sccd_ec_t a, c;
 
-		sccd_ec_random(&a);
+		sccd_ec_random(a);
 
 		SCCD_BENCH_KERNEL("ec_copy",
-			sccd_ec_copy(&c, &a);
+			sccd_ec_copy(c, a);
 		)
 	}
 	SCCD_BENCH_RESULTS("ec_copy")
@@ -323,7 +323,7 @@ void bench_vbnn_ibs_sign() {
 		sccd_vbnn_ibs_sig_t signature;
 
 		SCCD_BENCH_KERNEL("vbnn_ibs_sign",
-			sccd_vbnn_ibs_sign(random, &ta.public, &user, id, sizeof(id), message, sizeof(message), &signature);
+			sccd_vbnn_ibs_sign(random, ta.public, &user, id, sizeof(id), message, sizeof(message), &signature);
 		)
 	}
 	SCCD_BENCH_RESULTS("vbnn_ibs_sign")
@@ -352,7 +352,7 @@ void bench_vbnn_ibs_verify() {
 		sccd_fp_random(random);
 
 		sccd_vbnn_ibs_sig_t signature;
-		sccd_vbnn_ibs_sign(random, &ta.public, &user, id, sizeof(id), message, sizeof(message), &signature);
+		sccd_vbnn_ibs_sign(random, ta.public, &user, id, sizeof(id), message, sizeof(message), &signature);
 
 		int result;
 		if (z % 2) {
@@ -360,7 +360,7 @@ void bench_vbnn_ibs_verify() {
 		}
 
 		SCCD_BENCH_KERNEL("vbnn_ibs_verify",
-			result = sccd_vbnn_ibs_verify(&ta.public, id, sizeof(id), message, sizeof(message), &signature);
+			result = sccd_vbnn_ibs_verify(ta.public, id, sizeof(id), message, sizeof(message), &signature);
 		)
 	}
 	SCCD_BENCH_RESULTS("vbnn_ibs_verify")
@@ -377,7 +377,7 @@ void bench() {
 	printf("backend: %s\n", sccd_backend_name());
 
 	sccd_cycles_init();
-	sccd_random_init();
+	sccd_init();
 
 	bench_cycles();
 	bench_noop();
