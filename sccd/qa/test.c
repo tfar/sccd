@@ -4,7 +4,7 @@
 
 #include <assert.h>
 #include <stdio.h>
-
+#include <stdlib.h>
 
 void test_fp_random() {
 	printf("test fb random\n");
@@ -50,8 +50,28 @@ void test_ec_random() {
 	}
 }
 
+void test_ec_serialize() {
+	for (int a = 0; a < 100; a++) {
+		sccd_ec_t n;
+		sccd_ec_t m;
+		sccd_ec_random(n);
+
+		size_t binSize = sccd_ec_bin_size(n);
+
+		uint8_t* data = malloc(binSize);
+		assert(data);
+
+		assert(sccd_ec_bin_write(n, data, binSize) == 0);
+		assert(sccd_ec_bin_read(m, data, binSize) == 0);
+		assert(sccd_ec_equal(n, m));
+
+		free(data);
+	}
+}
+
 void test_ecc() {
 	test_ec_random();
+	test_ec_serialize();
 }
 
 void test_vbnn_ibs() {

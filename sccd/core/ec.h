@@ -25,3 +25,7 @@ void sccd_ec_mul(sccd_ec_t result, const sccd_ec_t p, const uint8_t* k);
 void sccd_ec_random(sccd_ec_t result);
 int sccd_ec_equal(const sccd_ec_t a, const sccd_ec_t b);
 void sccd_ec_copy(sccd_ec_t result, const sccd_ec_t source);
+
+size_t sccd_ec_bin_size(const sccd_ec_t a);
+int sccd_ec_bin_write(const sccd_ec_t a, uint8_t* data, size_t dataSize);
+int sccd_ec_bin_read(sccd_ec_t a, const uint8_t* data, size_t dataSize);

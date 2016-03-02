@@ -7,7 +7,7 @@ sccd_ec_t_return sccd_ec_get_base() {
 #elif defined(SCCD_BACKEND_RELIC)
 	static sccd_ec_t base_point;
 	ec_curve_get_gen(base_point);
-	return &base_point;
+	return (sccd_ec_t_return)&base_point;
 #endif
 }
 
@@ -17,7 +17,7 @@ sccd_ec_t_return sccd_ec_get_neutral() {
 #elif defined(SCCD_BACKEND_RELIC)
 	static sccd_ec_t neutral;
 	ec_set_infty(neutral);
-	return &neutral;
+	return (sccd_ec_t_return)&neutral;
 #endif
 }
 
@@ -81,13 +81,79 @@ void sccd_ec_copy(sccd_ec_t result, const sccd_ec_t source) {
 
 int sccd_ec_equal(const sccd_ec_t a, const sccd_ec_t b) {
 #if defined(SCCD_BACKEND_C25519)
-	int x_eq = f25519_eq(a->x, b->x);
-	int y_eq = f25519_eq(a->y, b->y);
-	int t_eq = f25519_eq(a->t, b->t);
-	int z_eq = f25519_eq(a->z, b->z);
-	int res = (x_eq && y_eq && t_eq && z_eq);
+	uint8_t a_x[F25519_SIZE];
+	uint8_t a_y[F25519_SIZE];
+	uint8_t b_x[F25519_SIZE];
+	uint8_t b_y[F25519_SIZE];
+
+	/* Convert points to affine form. */
+	ed25519_unproject(a_x, a_y, a);
+	ed25519_unproject(b_x, b_y, b);
+
+	/* Compare affine points. */
+	int x_eq = f25519_eq(a_x, b_x);
+	int y_eq = f25519_eq(a_y, b_y);
+	int res = (x_eq && y_eq);
 	return res;
 #elif defined(SCCD_BACKEND_RELIC)
-	return ec_cmp(a, b);
+	sccd_ec_t aNorm;
+	sccd_ec_t bNorm;
+	ec_norm(aNorm, a);
+	ec_norm(bNorm, b);
+	return ec_cmp(aNorm, bNorm) == CMP_EQ ? 1 : 0;
 #endif
+}
+
+size_t sccd_ec_bin_size(const sccd_ec_t a) {
+	size_t binSize = -1;
+#if defined(SCCD_BACKEND_C25519)
+	binSize = ED25519_PACK_SIZE;
+#elif defined(SCCD_BACKEND_RELIC)
+	binSize = ec_size_bin(a, 0);
+#endif
+	return binSize;
+}
+
+int sccd_ec_bin_write(const sccd_ec_t a, uint8_t* data, size_t dataSize) {
+	int failure = 1;
+
+	#if defined(SCCD_BACKEND_C25519)
+	/* Check if provided buffer is large enough. */
+	if (dataSize >= ED25519_PACK_SIZE) {
+		uint8_t x[F25519_SIZE];
+		uint8_t y[F25519_SIZE];
+
+		/* Convert point to affine form. */
+		ed25519_unproject(x, y, a);
+
+		/* Pack affine point into data buffer. */
+		ed25519_pack(data, x, y);
+		failure = 0;
+	}
+	#elif defined(SCCD_BACKEND_RELIC)
+		ec_write_bin(data, dataSize, a, 0);
+		failure = 0;
+	#endif
+
+	return failure;
+}
+
+int sccd_ec_bin_read(sccd_ec_t a, const uint8_t* data, size_t dataSize) {
+	int failure = 1;
+	#if defined(SCCD_BACKEND_C25519)
+	/* Check if the provided buffer is of correct size. */
+	if (dataSize == ED25519_PACK_SIZE) {
+		/* Try to decompress data into a valid point. */
+		if (ed25519_try_unpack(a->x, a->y, data) == 1) {
+			/* Convert affine point to projective form. */
+			ed25519_project(a, a->x, a->y);
+
+			failure = 0;
+		}
+	}
+	#elif defined(SCCD_BACKEND_RELIC)
+		ec_read_bin(a, data, dataSize);
+		failure = 0;
+	#endif
+	return failure;
 }

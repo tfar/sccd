@@ -17,21 +17,21 @@ static uint64_t min(const uint64_t a, const uint64_t b) {
 }
 
 #define SCCD_BENCH_KERNEL(NAME, SCCD_BENCH) 									\
-	uint64_t bench_times[bench_iterations]; 										\
+	uint64_t bench_times[bench_iterations]; 									\
 	for (int q = 0; q < bench_iterations; q++) {								\
-		uint64_t start = sccd_cycles(); 													\
-		SCCD_BENCH 																								\
-		uint64_t end = sccd_cycles(); 														\
-		end = (end - start); 																			\
-		if (end > LLONG_MAX) { 																		\
-			q = q - 1; 																							\
-		} else {																									\
-			bench_times[q] = end;																		\
-		}																													\
-	} 																													\
-	cycles_table[z] = bench_times[0]; 													\
+		uint64_t start = sccd_cycles(); 										\
+		SCCD_BENCH 																\
+		uint64_t end = sccd_cycles(); 											\
+		end = (end - start); 													\
+		if (end > LLONG_MAX) { 													\
+			q = q - 1; 															\
+		} else {																\
+			bench_times[q] = end;												\
+		}																		\
+	} 																			\
+	cycles_table[z] = bench_times[0]; 											\
 	for (int q = 1; q < bench_iterations; q++) {								\
-		cycles_table[z] = min(cycles_table[z], bench_times[q]); 	\
+		cycles_table[z] = min(cycles_table[z], bench_times[q]); 				\
 	}
 
 
@@ -250,6 +250,48 @@ void bench_ec_copy() {
 	SCCD_BENCH_RESULTS("ec_copy")
 }
 
+void bench_ec_bin_write() {
+	uint64_t cycles_table[iterations];
+
+	sccd_ec_t a;
+	size_t binSize;
+	uint8_t* bin;
+	binSize = sccd_ec_bin_size(a);
+	bin = malloc(binSize);
+
+	for (int z = 0; z < iterations; z++) {
+		sccd_ec_random(a);
+
+		SCCD_BENCH_KERNEL("ec_bin_write",
+			sccd_ec_bin_write(a, bin, binSize);
+		)
+	}
+	free(bin);
+	SCCD_BENCH_RESULTS("ec_bin_write")
+}
+
+void bench_ec_bin_read() {
+	uint64_t cycles_table[iterations];
+
+	sccd_ec_t a, b;
+	size_t binSize;
+	uint8_t* bin;
+	binSize = sccd_ec_bin_size(a);
+	bin = malloc(binSize);
+
+	for (int z = 0; z < iterations; z++) {
+		sccd_ec_random(a);
+
+		sccd_ec_bin_write(a, bin, binSize);
+
+		SCCD_BENCH_KERNEL("ec_bin_read",
+			sccd_ec_bin_read(b, bin, binSize);
+		)
+	}
+	free(bin);
+	SCCD_BENCH_RESULTS("ec_bin_read")
+}
+
 void bench_ecc() {
 	bench_ec_add();
 	bench_ec_sub();
@@ -257,6 +299,8 @@ void bench_ecc() {
 	bench_ec_mul();
 	bench_ec_equal();
 	bench_ec_copy();
+	bench_ec_bin_write();
+	bench_ec_bin_read();
 }
 
 void bench_vbnn_ibs_ta_init() {
