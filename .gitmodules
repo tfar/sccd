@@ -2,3 +2,6 @@
 	path = 3rdparty/relic
 	url = https://github.com/relic-toolkit/relic
 	branch = master
+[submodule "3rdparty/BLAKE2"]
+	path = 3rdparty/BLAKE2
+	url = https://github.com/BLAKE2/BLAKE2.git
