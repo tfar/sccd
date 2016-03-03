@@ -29,3 +29,5 @@ void sccd_ec_copy(sccd_ec_t result, const sccd_ec_t source);
 size_t sccd_ec_bin_size(const sccd_ec_t a);
 int sccd_ec_bin_write(const sccd_ec_t a, uint8_t* data, size_t dataSize);
 int sccd_ec_bin_read(sccd_ec_t a, const uint8_t* data, size_t dataSize);
+
+void sccd_ec_str_write(const sccd_ec_t a, char* str, size_t strSize);

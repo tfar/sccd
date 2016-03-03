@@ -40,3 +40,5 @@ int sccd_fp_is_valid(const sccd_fp_t n);
 int sccd_fp_equal(const sccd_fp_t a, const sccd_fp_t b);
 
 void sccd_fp_copy(sccd_fp_t target, const sccd_fp_t source);
+
+void sccd_fp_str_write(const sccd_fp_t a, char* str, size_t strSize);

@@ -1,6 +1,8 @@
 #include <sccd/core/fp.h>
 #include <sccd/core/util.h>
 
+#include <stdio.h>
+
 void sccd_fp_add(sccd_fp_t res, const sccd_fp_t a, const sccd_fp_t b) {
 #if defined(SCCD_BACKEND_C25519)
 	f25519_add(res, a, b);
@@ -96,5 +98,43 @@ void sccd_fp_neg(sccd_fp_t res, const sccd_fp_t a) {
 	f25519_neg(res, a);
 #elif defined(SCCD_BACKEND_RELIC)
 	fp_neg(res, a);
+#endif
+}
+
+void sccd_fp_str_write(const sccd_fp_t a, char* str, size_t strSize) {
+#if defined(SCCD_BACKEND_C25519)
+	int i;
+	size_t writtenBytes = 0;
+	char* currentPos = str;
+	size_t remainingSize = strSize;
+
+	writtenBytes = snprintf(currentPos, remainingSize, "fp(");
+	currentPos = currentPos + writtenBytes;
+	remainingSize = remainingSize - writtenBytes;
+	for (i = 0; i < F25519_SIZE; i++) {
+		writtenBytes = snprintf(currentPos, remainingSize, "%02x", a[i]);
+		currentPos = currentPos + writtenBytes;
+		remainingSize = remainingSize - writtenBytes;
+	}
+	writtenBytes = snprintf(currentPos, remainingSize, ")");
+	currentPos = currentPos + writtenBytes;
+	remainingSize = remainingSize - writtenBytes;
+#elif defined(SCCD_BACKEND_RELIC)
+	char* currentPos = str;
+	size_t remainingSize = strSize;
+	int fpSize = fp_size_str(a, 10);
+	size_t writtenBytes = 0;
+
+	writtenBytes = snprintf(currentPos, remainingSize, "fp(");
+	currentPos = currentPos + writtenBytes;
+	remainingSize = remainingSize - writtenBytes;
+
+	fp_write_str(currentPos, remainingSize, a, 16);
+	currentPos = currentPos + fpSize;
+	remainingSize = remainingSize - fpSize;
+
+	writtenBytes = snprintf(currentPos, remainingSize, ")");
+	currentPos = currentPos + writtenBytes;
+	remainingSize = remainingSize - writtenBytes;
 #endif
 }

@@ -1,6 +1,8 @@
 #include <sccd/core/ec.h>
 #include <sccd/core/fp.h>
 
+#include <stdio.h>
+
 sccd_ec_t_return sccd_ec_get_base() {
 #if defined(SCCD_BACKEND_C25519)
 	return &ed25519_base;
@@ -156,4 +158,52 @@ int sccd_ec_bin_read(sccd_ec_t a, const uint8_t* data, size_t dataSize) {
 		failure = 0;
 	#endif
 	return failure;
+}
+
+void sccd_ec_str_write(const sccd_ec_t a, char* str, size_t strSize) {
+#if defined(SCCD_BACKEND_C25519)
+	uint8_t x[F25519_SIZE];
+	uint8_t y[F25519_SIZE];
+	int i;
+	size_t writtenBytes = 0;
+	char* currentPos = str;
+	size_t remainingSize = strSize;
+	ed25519_unproject(x, y, a);
+
+	writtenBytes = snprintf(currentPos, remainingSize, "ec(");
+	currentPos = currentPos + writtenBytes;
+	remainingSize = remainingSize - writtenBytes;
+	for (i = 0; i < F25519_SIZE; i++) {
+		writtenBytes = snprintf(currentPos, remainingSize, "%02x", x[i]);
+		currentPos = currentPos + writtenBytes;
+		remainingSize = remainingSize - writtenBytes;
+	}
+	writtenBytes = snprintf(currentPos, remainingSize, ", ");
+	currentPos = currentPos + writtenBytes;
+	remainingSize = remainingSize - writtenBytes;
+	for (i = 0; i < F25519_SIZE; i++) {
+		writtenBytes = snprintf(currentPos, remainingSize, "%02x", y[i]);
+		currentPos = currentPos + writtenBytes;
+		remainingSize = remainingSize - writtenBytes;
+	}
+	writtenBytes = snprintf(currentPos, remainingSize, ")");
+	currentPos = currentPos + writtenBytes;
+	remainingSize = remainingSize - writtenBytes;
+#elif defined(SCCD_BACKEND_RELIC)
+	size_t writtenBytes = 0;
+	char* currentPos = str;
+	size_t remainingSize = strSize;
+
+	writtenBytes = snprintf(currentPos, remainingSize, "ec(");
+	currentPos = currentPos + writtenBytes;
+	remainingSize = remainingSize - writtenBytes;
+
+	writtenBytes = snprintf(currentPos, remainingSize, "UNSUPPORTED FEATURE");
+	currentPos = currentPos + writtenBytes;
+	remainingSize = remainingSize - writtenBytes;
+
+	writtenBytes = snprintf(currentPos, remainingSize, ")");
+	currentPos = currentPos + writtenBytes;
+	remainingSize = remainingSize - writtenBytes;
+#endif
 }

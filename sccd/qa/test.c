@@ -36,9 +36,20 @@ void test_fp_add() {
 	}
 }
 
+void test_fp_print() {
+	printf("test_fp_print\n");
+	char buffer[100];
+	sccd_fp_t a;
+
+	sccd_fp_random(a);
+	sccd_fp_str_write(a, buffer, 100);
+	printf("a = %s\n", buffer);
+}
+
 void test_fb() {
 	test_fp_random();
 	test_fp_add();
+	test_fp_print();
 }
 
 void test_ec_random() {
@@ -69,9 +80,20 @@ void test_ec_serialize() {
 	}
 }
 
+void test_ec_print() {
+	printf("test_ec_print\n");
+	char buffer[300];
+	sccd_ec_t a;
+
+	sccd_ec_random(a);
+	sccd_ec_str_write(a, buffer, 300);
+	printf("a = %s\n", buffer);
+}
+
 void test_ecc() {
 	test_ec_random();
 	test_ec_serialize();
+	test_ec_print();
 }
 
 void test_vbnn_ibs() {
