@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdint.h>
 
 void sccd_cycles_init();

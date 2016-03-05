@@ -4,8 +4,8 @@
 #include <sccd/core/fp.h>
 
 typedef struct {
-	sccd_fp_t private;
-	sccd_ec_t public;
+	sccd_fp_t private_key;
+	sccd_ec_t public_key;
 } sccd_vbnn_ibs_ta_t;
 
 typedef struct {

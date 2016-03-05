@@ -1,3 +1,4 @@
+#pragma once
 
 #if defined(SCCD_BACKEND_C25519)
 	#include <c25519/src/ed25519.h>

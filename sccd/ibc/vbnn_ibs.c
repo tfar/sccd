@@ -5,10 +5,10 @@
 void sccd_vbnn_ibs_ta_init(const sccd_fp_t random, sccd_vbnn_ibs_ta_t* ta) {
 	// private key generation: generate x \in Z_p (TA private key)
 	// random generation externalized for testing
-	sccd_fp_copy(ta->private, random);
+	sccd_fp_copy(ta->private_key, random);
 
 	// public key generation: calculate P_0 = x * P
-	sccd_ec_mul(ta->public, sccd_ec_get_base(), ta->private);
+	sccd_ec_mul(ta->public_key, sccd_ec_get_base(), ta->private_key);
 }
 
 void sccd_vbnn_ibs_ta_extract_key(const sccd_fp_t random, const sccd_vbnn_ibs_ta_t* ta, const uint8_t* id, const size_t id_len, sccd_vbnn_ibs_user_t *extracted_user_key) {
@@ -30,7 +30,7 @@ void sccd_vbnn_ibs_ta_extract_key(const sccd_fp_t random, const sccd_vbnn_ibs_ta
 	sccd_fp_normalize(c);
 
 	// s = random + cx
-	sccd_fp_mul(c, c, ta->private);
+	sccd_fp_mul(c, c, ta->private_key);
 	sccd_fp_add(extracted_user_key->s, random, c);
 }
 

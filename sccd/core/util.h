@@ -1,6 +1,7 @@
+#pragma once
+
 #include <stdint.h>
 #include <stddef.h>
-
 
 void sccd_init();
 
