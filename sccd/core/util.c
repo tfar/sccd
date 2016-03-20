@@ -79,3 +79,16 @@ void sccd_random_bytes(uint8_t *data, size_t length) {
 	}
 #endif
 }
+
+int sccd_const_time_cmp(const uint8_t* a, const uint8_t* b, size_t size) {
+	const uint8_t* a_ = a;
+    const uint8_t* b_ = b;
+    uint8_t result = 0;
+    size_t i;
+
+    for (i = 0; i < size; i++) {
+      result |= a_[i] ^ b_[i];
+    }
+
+    return result;
+}
