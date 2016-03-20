@@ -367,7 +367,7 @@ void bench_vbnn_ibs_sign() {
 		sccd_vbnn_ibs_sig_t signature;
 
 		SCCD_BENCH_KERNEL("vbnn_ibs_sign",
-			sccd_vbnn_ibs_sign(random, ta.public_key, &user, id, sizeof(id), message, sizeof(message), &signature);
+			sccd_vbnn_ibs_sign(random, &user, id, sizeof(id), message, sizeof(message), &signature);
 		)
 	}
 	SCCD_BENCH_RESULTS("vbnn_ibs_sign")
@@ -396,7 +396,7 @@ void bench_vbnn_ibs_verify() {
 		sccd_fp_random(random);
 
 		sccd_vbnn_ibs_sig_t signature;
-		sccd_vbnn_ibs_sign(random, ta.public_key, &user, id, sizeof(id), message, sizeof(message), &signature);
+		sccd_vbnn_ibs_sign(random, &user, id, sizeof(id), message, sizeof(message), &signature);
 
 		int result;
 		if (z % 2) {

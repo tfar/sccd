@@ -36,7 +36,6 @@ void sccd_vbnn_ibs_ta_extract_key(const sccd_fp_t random, const sccd_vbnn_ibs_ta
 
 void sccd_vbnn_ibs_sign(
 	const sccd_fp_t random,
-	const sccd_ec_t ta_public,
 	const sccd_vbnn_ibs_user_t* user_key,
 	const uint8_t* id, const size_t id_len,
 	const uint8_t* msg, const size_t msg_len,
