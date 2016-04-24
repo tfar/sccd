@@ -3,6 +3,7 @@ set -e
 
 
 # List of variables used in this script
+PROJECT_ROOT=$PWD
 CC=""
 SCCD_SOURCES="sccd/core/ec.c sccd/core/fp.c sccd/core/util.c sccd/core/clock.c sccd/ibc/vbnn_ibs.c"
 SCCD_INCLUDE_FLAGS="-I."
@@ -25,18 +26,22 @@ then
 	echo "Mount Pi root to /tmp/cryptopi_root"
 	mkdir -p /tmp/cryptopi_root
 	sshpass -p"$RASPBERRYPI_PW" sshfs pi@cryptopi:/ /tmp/cryptopi_root -ocache=no -onolocalcaches -ovolname=ssh
-elif [ "$1" = "pi_standalone" ]
+elif [ "$1" = "riot" ]
 then
-	#export PATH=/Users/tobias/Downloads/gcc-arm-none-eabi-5_2-2015q4/bin:$PATH
-	#export PATH=/usr/local/linaro/arm-linux-gnueabihf-raspbian/bin:$PATH
-	PI_ROOT=/tmp/cryptopi_root
+	echo "Building for RIOT."
+	export PATH=/Users/tobias/Downloads/gcc-arm-none-eabi-5_2-2015q4/bin:$PATH
 	CC=arm-none-eabi-gcc
-	SYSTEM_FLAGS="-Ofast -mfpu=vfp -mfloat-abi=hard -march=armv6zk -mtune=arm1176jzf-s -fno-toplevel-reorder"
+	SYSTEM_FLAGS="-mcpu=cortex-m0plus -mlittle-endian -mthumb -mfloat-abi=soft -mno-thumb-interwork -ffunction-sections -fdata-sections -fno-builtin -fshort-enums -g3"
+	#export PATH=/usr/local/linaro/arm-linux-gnueabihf-raspbian/bin:$PATH
+	#PI_ROOT=/tmp/cryptopi_root
+	#CC=arm-none-eabi-gcc
+	#SYSTEM_FLAGS="-Ofast -mfpu=vfp -mfloat-abi=hard -march=armv6zk -mtune=arm1176jzf-s -fno-toplevel-reorder"
 elif [ "$1" = "ctgrind" ]
 then
 	echo "Building for ctgrind."
 	CC=gcc
 else
+	echo "Usage: ./build.sh (native|pi|ctgrind|riot) (c25519|relic)"
 	exit 0
 fi
 
@@ -106,12 +111,30 @@ then
 fi
 
 echo "\nRun tests"
-$CC $SYSTEM_FLAGS -g -O3 -std=c11 $BACKEND_CC_FLAGS \
-	$SCCD_INCLUDE_FLAGS \
-	$SCCD_SOURCES sccd/qa/test.c \
-	$BACKEND_SOURCES \
-	$BLAKE_FLAGS \
-	-o test
+if [ "$1" = "riot" ]
+then
+	#set -x
+	$CC $SYSTEM_FLAGS -Os -std=c11 $BACKEND_CC_FLAGS \
+		$SCCD_INCLUDE_FLAGS \
+		$source_file \
+		$BLAKE_FLAGS \
+		-c  $SCCD_SOURCES $BACKEND_SOURCES
+	arm-none-eabi-ar rcs sccd/qa/riot-test/libsccd_all.a *.o
+	cd sccd/qa/riot-test
+	make clean
+	make -j 4
+	make flash 2> /dev/null
+	export RIOTBASE="$PROJECT_ROOT/3rdparty/RIOT/"
+	../runner.py
+	cd $PROJECT_ROOT
+else
+	$CC $SYSTEM_FLAGS -g -O3 -std=c11 $BACKEND_CC_FLAGS \
+		$SCCD_INCLUDE_FLAGS \
+		$SCCD_SOURCES sccd/qa/test.c \
+		$BACKEND_SOURCES \
+		$BLAKE_FLAGS \
+		-o test
+fi
 
 if [ "$1" = "native" ]
 then
@@ -122,15 +145,34 @@ then
 	sshpass -p"$RASPBERRYPI_PW" ssh pi@cryptopi 'sudo /tmp/test'
 fi
 
-echo "\nRun benchmark"
-$CC $SYSTEM_FLAGS -fno-omit-frame-pointer -O3 -std=c11 $BACKEND_CC_FLAGS \
-	$SCCD_INCLUDE_FLAGS \
-	$SCCD_SOURCES sccd/qa/bench.c \
-	$BACKEND_SOURCES \
-	$BLAKE_FLAGS \
-	-o bench
-
 now=$(date +"%Y-%m-%d_%H-%M-%S")
+
+echo "\nRun benchmark"
+if [ "$1" = "riot" ]
+then
+	#set -x
+	$CC $SYSTEM_FLAGS -Os -std=c11 $BACKEND_CC_FLAGS \
+		$SCCD_INCLUDE_FLAGS \
+		$source_file \
+		$BLAKE_FLAGS \
+		-DSCCD_RIOT_TIMER \
+		-c  $SCCD_SOURCES $BACKEND_SOURCES
+	arm-none-eabi-ar rcs sccd/qa/riot-bench/libsccd_all.a *.o
+	cd sccd/qa/riot-bench
+	make clean
+	make -j 4
+	make flash 2> /dev/null
+	export RIOTBASE="$PROJECT_ROOT/3rdparty/RIOT/"
+	../runner.py > "$PROJECT_ROOT/benchmark_$1_$now.log"
+	cd $PROJECT_ROOT
+else
+	$CC $SYSTEM_FLAGS -fno-omit-frame-pointer -O3 -std=c11 $BACKEND_CC_FLAGS \
+		$SCCD_INCLUDE_FLAGS \
+		$SCCD_SOURCES sccd/qa/bench.c \
+		$BACKEND_SOURCES \
+		$BLAKE_FLAGS \
+		-o bench
+fi
 
 if [ "$1" = "native" ]
 then
@@ -140,10 +182,8 @@ then
 	sshpass -p"$RASPBERRYPI_PW" scp ./bench pi@cryptopi:/tmp/bench
 	sshpass -p"$RASPBERRYPI_PW" ssh pi@cryptopi "sudo nice -n -20 chrt -f 99 /tmp/bench 12 > /tmp/benchmark_$1_$now.log" #| ./analyze_bench.py
 	sshpass -p"$RASPBERRYPI_PW" scp pi@cryptopi:/tmp/benchmark_$1_$now.log ./
-elif [ "$1" = "pi_standalone" ]
-then
-	echo "foo"
 fi
+
 cat benchmark_$1_$now.log | ./analyze_bench.py
 # ./bench 10 | ./analyze_bench.py
 #now=$(date +"%Y-%m-%d_%H-%M-%S")

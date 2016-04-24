@@ -8,12 +8,50 @@
 #include <sccd/core/util.h>
 #include <sccd/ibc/vbnn_ibs.h>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-variable"
 
+#ifdef RIOT_BOARD
+static uint32_t iterations = 10;
+static uint32_t bench_iterations = 4;
+#else
 static uint32_t iterations = 10;
 static uint32_t bench_iterations = 15;
+#endif
 
 static uint64_t min(const uint64_t a, const uint64_t b) {
 	return a < b ? a : b;
+}
+
+
+static char bfr[20+1];
+
+void u64toa_naive(uint64_t value, char* buffer) {
+    char temp[20];
+    char *p = temp;
+    do {
+        *p++ = ((char)(value % 10)) + '0';
+        value /= 10;
+    } while (value > 0);
+
+    do {
+        *buffer++ = *--p;
+    } while (p != temp);
+
+    *buffer = '\0';
+}
+
+static char* uint64ToDecimal(uint64_t v) {
+	u64toa_naive(v, bfr);
+  	return bfr;
+}
+
+static void print_bench_timing(const char* name, uint64_t cycles) {
+#ifdef RIOT_BOARD
+	printf("bench(%s): %s %s\n", name, uint64ToDecimal(cycles), sccd_cylces_unit());
+#else
+	printf("bench(%s): %llu %s\n", name, cycles, sccd_cylces_unit());
+#endif
 }
 
 #define SCCD_BENCH_KERNEL(NAME, SCCD_BENCH) 									\
@@ -37,10 +75,10 @@ static uint64_t min(const uint64_t a, const uint64_t b) {
 
 #define SCCD_BENCH_RESULTS(NAME) \
 	for (int z = 0; z < iterations; z++) { \
-		printf("bench("NAME"): %llu cycles\n", cycles_table[z]); \
+		print_bench_timing(NAME, cycles_table[z]); \
 	}
 
-void bench_noop() {
+void bench_noop(void) {
 	uint64_t cycles_table[iterations];
 	for (int z = 0; z < iterations; z++) {
 		SCCD_BENCH_KERNEL("nop",
@@ -50,7 +88,7 @@ void bench_noop() {
 	SCCD_BENCH_RESULTS("nop")
 }
 
-void bench_cycles() {
+void bench_cycles(void) {
 	uint64_t cycles_table[iterations];
 	for (int z = 0; z < iterations; z++) {
 		uint64_t tmp;
@@ -61,7 +99,7 @@ void bench_cycles() {
 	SCCD_BENCH_RESULTS("cycles")
 }
 
-void bench_fp_add() {
+void bench_fp_add(void) {
 	uint64_t cycles_table[iterations];
 	for (int z = 0; z < iterations; z++) {
 		sccd_fp_t a, b, c;
@@ -76,7 +114,7 @@ void bench_fp_add() {
 	SCCD_BENCH_RESULTS("fp_add")
 }
 
-void bench_fp_sub() {
+void bench_fp_sub(void) {
 	uint64_t cycles_table[iterations];
 	for (int z = 0; z < iterations; z++) {
 		sccd_fp_t a, b, c;
@@ -91,7 +129,7 @@ void bench_fp_sub() {
 	SCCD_BENCH_RESULTS("fp_sub")
 }
 
-void bench_fp_mul() {
+void bench_fp_mul(void) {
 	uint64_t cycles_table[iterations];
 	for (int z = 0; z < iterations; z++) {
 		sccd_fp_t a, b, c;
@@ -106,7 +144,7 @@ void bench_fp_mul() {
 	SCCD_BENCH_RESULTS("fp_mul")
 }
 
-void bench_fp_inv() {
+void bench_fp_inv(void) {
 	uint64_t cycles_table[iterations];
 	for (int z = 0; z < iterations; z++) {
 		sccd_fp_t a, c;
@@ -120,7 +158,7 @@ void bench_fp_inv() {
 	SCCD_BENCH_RESULTS("fp_inv")
 }
 
-void bench_fp_equal() {
+void bench_fp_equal(void) {
 	uint64_t cycles_table[iterations];
 	for (int z = 0; z < iterations; z++) {
 		sccd_fp_t a, b;
@@ -136,7 +174,7 @@ void bench_fp_equal() {
 }
 
 
-void bench_fp_copy() {
+void bench_fp_copy(void) {
 	uint64_t cycles_table[iterations];
 	for (int z = 0; z < iterations; z++) {
 		sccd_fp_t a, b;
@@ -150,18 +188,29 @@ void bench_fp_copy() {
 	SCCD_BENCH_RESULTS("fp_copy")
 }
 
+void bench_fp_random(void) {
+	uint64_t cycles_table[iterations];
+	for (int z = 0; z < iterations; z++) {
+		sccd_fp_t a;
 
+		SCCD_BENCH_KERNEL("fp_random",
+			sccd_fp_random(a);
+		)
+	}
+	SCCD_BENCH_RESULTS("fp_random")
+}
 
-void bench_fp() {
+void bench_fp(void) {
 	bench_fp_add();
 	bench_fp_sub();
 	bench_fp_mul();
 	bench_fp_inv();
 	bench_fp_equal();
 	bench_fp_copy();
+	bench_fp_random();
 }
 
-void bench_ec_add() {
+void bench_ec_add(void) {
 	uint64_t cycles_table[iterations];
 	for (int z = 0; z < iterations; z++) {
 		sccd_ec_t a, b, c;
@@ -176,7 +225,7 @@ void bench_ec_add() {
 	SCCD_BENCH_RESULTS("ec_add")
 }
 
-void bench_ec_sub() {
+void bench_ec_sub(void) {
 	uint64_t cycles_table[iterations];
 	for (int z = 0; z < iterations; z++) {
 		sccd_ec_t a, b, c;
@@ -191,7 +240,7 @@ void bench_ec_sub() {
 	SCCD_BENCH_RESULTS("ec_sub")
 }
 
-void bench_ec_double() {
+void bench_ec_double(void) {
 	uint64_t cycles_table[iterations];
 	for (int z = 0; z < iterations; z++) {
 		sccd_ec_t a, c;
@@ -205,7 +254,7 @@ void bench_ec_double() {
 	SCCD_BENCH_RESULTS("ec_double")
 }
 
-void bench_ec_mul() {
+void bench_ec_mul(void) {
 	uint64_t cycles_table[iterations];
 	for (int z = 0; z < iterations; z++) {
 		sccd_ec_t a, c;
@@ -221,7 +270,7 @@ void bench_ec_mul() {
 	SCCD_BENCH_RESULTS("ec_mul")
 }
 
-void bench_ec_equal() {
+void bench_ec_equal(void) {
 	uint64_t cycles_table[iterations];
 	for (int z = 0; z < iterations; z++) {
 		sccd_ec_t a, b;
@@ -236,7 +285,7 @@ void bench_ec_equal() {
 	SCCD_BENCH_RESULTS("ec_equal")
 }
 
-void bench_ec_copy() {
+void bench_ec_copy(void) {
 	uint64_t cycles_table[iterations];
 	for (int z = 0; z < iterations; z++) {
 		sccd_ec_t a, c;
@@ -250,7 +299,7 @@ void bench_ec_copy() {
 	SCCD_BENCH_RESULTS("ec_copy")
 }
 
-void bench_ec_bin_write() {
+void bench_ec_bin_write(void) {
 	uint64_t cycles_table[iterations];
 
 	sccd_ec_t a;
@@ -270,7 +319,7 @@ void bench_ec_bin_write() {
 	SCCD_BENCH_RESULTS("ec_bin_write")
 }
 
-void bench_ec_bin_read() {
+void bench_ec_bin_read(void) {
 	uint64_t cycles_table[iterations];
 
 	sccd_ec_t a, b;
@@ -292,7 +341,21 @@ void bench_ec_bin_read() {
 	SCCD_BENCH_RESULTS("ec_bin_read")
 }
 
-void bench_ecc() {
+void bench_ec_random(void) {
+	uint64_t cycles_table[iterations];
+	for (int z = 0; z < iterations; z++) {
+		sccd_ec_t a;
+
+		sccd_ec_random(a);
+
+		SCCD_BENCH_KERNEL("ec_random",
+			sccd_ec_random(a);
+		)
+	}
+	SCCD_BENCH_RESULTS("ec_random")
+}
+
+void bench_ecc(void) {
 	bench_ec_add();
 	bench_ec_sub();
 	bench_ec_double();
@@ -301,9 +364,10 @@ void bench_ecc() {
 	bench_ec_copy();
 	bench_ec_bin_write();
 	bench_ec_bin_read();
+	bench_ec_random();
 }
 
-void bench_vbnn_ibs_ta_init() {
+void bench_vbnn_ibs_ta_init(void) {
 	uint64_t cycles_table[iterations];
 	for (int z = 0; z < iterations; z++) {
 		sccd_fp_t random;
@@ -318,7 +382,7 @@ void bench_vbnn_ibs_ta_init() {
 	SCCD_BENCH_RESULTS("vbnn_ibs_ta_init")
 }
 
-void bench_vbnn_ibs_ta_extract_key() {
+void bench_vbnn_ibs_ta_extract_key(void) {
 	uint64_t cycles_table[iterations];
 
 	for (int z = 0; z < iterations; z++) {
@@ -342,7 +406,7 @@ void bench_vbnn_ibs_ta_extract_key() {
 	SCCD_BENCH_RESULTS("vbnn_ibs_ta_extract_key")
 }
 
-void bench_vbnn_ibs_sign() {
+void bench_vbnn_ibs_sign(void) {
 	uint64_t cycles_table[iterations];
 	for (int z = 0; z < iterations; z++) {
 		sccd_fp_t random;
@@ -373,7 +437,7 @@ void bench_vbnn_ibs_sign() {
 	SCCD_BENCH_RESULTS("vbnn_ibs_sign")
 }
 
-void bench_vbnn_ibs_verify() {
+void bench_vbnn_ibs_verify(void) {
 	uint64_t cycles_table[iterations];
 	for (int z = 0; z < iterations; z++) {
 		sccd_fp_t random;
@@ -410,14 +474,14 @@ void bench_vbnn_ibs_verify() {
 	SCCD_BENCH_RESULTS("vbnn_ibs_verify")
 }
 
-void bench_vbnn_ibs() {
+void bench_vbnn_ibs(void) {
 	bench_vbnn_ibs_ta_init();
 	bench_vbnn_ibs_ta_extract_key();
 	bench_vbnn_ibs_sign();
 	bench_vbnn_ibs_verify();
 }
 
-void bench() {
+void bench(void) {
 	printf("backend: %s\n", sccd_backend_name());
 
 	sccd_cycles_init();
@@ -429,8 +493,12 @@ void bench() {
 	bench_fp();
 	bench_ecc();
 	bench_vbnn_ibs();
+	printf("done\n");
 }
 
+#pragma GCC diagnostic pop
+
+#ifndef RIOT_BOARD
 int main(int argc, const char **argv) {
 	if (argc == 2) {
 		iterations = atoi(argv[1]);
@@ -454,3 +522,4 @@ int main(int argc, const char **argv) {
 	//free(cycles_table);
 	return 0;
 }
+#endif

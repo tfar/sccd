@@ -44,7 +44,7 @@ void sccd_init() {
 uint8_t sccd_random_byte() {
 	uint8_t randomByte = 0;
 
-	sccd_random_byte(&randomByte, 1);
+	sccd_random_bytes(&randomByte, 1);
 
 	return randomByte;
 }
@@ -74,7 +74,7 @@ void sccd_random_bytes(uint8_t *data, size_t length) {
 
 		blake2s_state S[1];
 		blake2s_init(S, 32);
-		blake2s_update(S, (const uint8_t*)random_iv, strlen(random_iv));
+		blake2s_update(S, random_state, sizeof(random_state));
 		blake2s_final(S, random_state, 32);
 	}
 #endif

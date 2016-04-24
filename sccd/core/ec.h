@@ -16,8 +16,8 @@
 	typedef ed_st const *sccd_ec_t_return;
 #endif
 
-sccd_ec_t_return sccd_ec_get_base();
-sccd_ec_t_return sccd_ec_get_neutral();
+sccd_ec_t_return sccd_ec_get_base(void);
+sccd_ec_t_return sccd_ec_get_neutral(void);
 
 void sccd_ec_add(sccd_ec_t result, const sccd_ec_t a, const sccd_ec_t b);
 void sccd_ec_double(sccd_ec_t result, const sccd_ec_t p);

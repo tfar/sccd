@@ -9,11 +9,11 @@ warmup_items = 2
 
 bench_cycles = {}
 
-p = re.compile(ur'bench\(([^\s]+)\): ([^\s]+) cycles')
+p = re.compile(ur'.*bench\(([^\s]+)\): ([^\s]+) [^\s]+')
 
 for line in sys.stdin:
 	line_match = re.match(p, line)
-	if line_match:
+	if line_match :
 		name, cycles = line_match.groups()
 		if not name in bench_cycles:
 			bench_cycles[name] = []
